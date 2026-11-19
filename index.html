@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Rakit PC Virtual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+/* Layout: header + tab bar; each tab = tool card on the left, result/explanation card on the right; stacks on phones */
+:root {
+  --bg: #f4f6fb; --surface: #ffffff; --surface-2: #e9edf8; --line: #d3d9ea;
+  --fg: #1b1f3b; --muted: #5c6079; --accent: #0089a6; --accent-2: #7c4dff;
+  --warn: #b07d00; --warn-bg: #fff4d1; --bad: #c0392b; --bad-bg: #fde7e4; --good: #1e8c82; --good-bg: #ddf5f2;
+  --hdd: #b07d00; --sata: #7c4dff; --nvme: #0089a6; --nvme2: #1e8c82;
+  --data: #dfe8ff; --data-fg: #1b1f3b; --par: #fff0c2; --par-fg: #7a5600; --q: #f0e4ff; --q-fg: #5a2fc4;
+  --display: "Source Serif 4", Cambria, Georgia, serif;
+  --body: "IBM Plex Sans", "Segoe UI", Calibri, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Courier New", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11142a; --surface: #1b2142; --surface-2: #232a52; --line: #343c6e;
+  --fg: #eef1fb; --muted: #a9b1d6; --accent: #39c7e6; --accent-2: #a98bff;
+  --warn: #ffcf57; --warn-bg: #3b3218; --bad: #ff8a7a; --bad-bg: #3d1f22; --good: #4fd6c8; --good-bg: #17363a;
+  --hdd: #ffcf57; --sata: #a98bff; --nvme: #39c7e6; --nvme2: #4fd6c8;
+  --data: #2a3566; --data-fg: #eef1fb; --par: #4a3d17; --par-fg: #ffd970; --q: #3a2a66; --q-fg: #d6c4ff;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #11142a; --surface: #1b2142; --surface-2: #232a52; --line: #343c6e;
+  --fg: #eef1fb; --muted: #a9b1d6; --accent: #39c7e6; --accent-2: #a98bff;
+  --warn: #ffcf57; --warn-bg: #3b3218; --bad: #ff8a7a; --bad-bg: #3d1f22; --good: #4fd6c8; --good-bg: #17363a;
+  --hdd: #ffcf57; --sata: #a98bff; --nvme: #39c7e6; --nvme2: #4fd6c8;
+  --data: #2a3566; --data-fg: #eef1fb; --par: #4a3d17; --par-fg: #ffd970; --q: #3a2a66; --q-fg: #d6c4ff;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; padding-inline: 16px; padding-block: 0 40px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+header { padding-block: 22px 10px; }
+h1 { font-family: var(--display); font-size: clamp(26px, 4vw, 36px); margin: 0; line-height: 1.1; text-wrap: balance; }
+.kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 66ch; }
+nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg); display: flex; gap: 6px; overflow-x: auto; padding-block: 10px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+nav.tabs button { font: 600 14px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 8px 14px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.card + .card { margin-top: 18px; }
+.grid > .card + .card { margin-top: 0; }
+.card h2 { font-family: var(--display); font-size: 22px; margin: 0 0 4px; }
+.card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 16px 0 6px; }
+.muted { color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); }
+.formgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.formgrid label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+input[type="number"], select { font: 14px var(--body); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); width: 100%; max-width: 100%; }
+.btn { font: 600 14px var(--body); border-radius: 8px; padding: 8px 13px; border: 1px solid var(--fg); background: var(--fg); color: var(--bg); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+.btn[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+.stat .lbl { font-size: 12px; color: var(--muted); }
+.stat .val { overflow-wrap: anywhere; font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat .val small { font: 500 13px var(--body); color: var(--muted); }
+.formula { font-family: var(--mono); font-size: 13px; background: var(--surface-2); border-radius: 8px; padding: 8px 10px; margin-top: 10px; overflow-wrap: anywhere; }
+.bars { display: grid; gap: 12px; margin-top: 10px; }
+.barrow { display: grid; grid-template-columns: 112px minmax(0, 1fr) 118px; gap: 10px; align-items: center; }
+@media (max-width: 520px) { .barrow { grid-template-columns: 80px minmax(0, 1fr) 104px; } }
+.barrow b { font-size: 14px; }
+.track { height: 24px; background: var(--surface-2); border-radius: 7px; overflow: hidden; }
+.track > span { display: block; height: 100%; border-radius: 7px; min-width: 3px; transition: width .35s; }
+.tm { font: 700 14px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.sub2 { font-size: 12px; color: var(--muted); grid-column: 2 / 4; margin-top: -8px; }
+.narr { background: var(--surface-2); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+.narr b.title { display: block; font-family: var(--display); font-size: 18px; margin-bottom: 4px; }
+.status { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+.status.ok { background: var(--good-bg); color: var(--good); }
+.status.warn { background: var(--warn-bg); color: var(--warn); }
+.status.bad { background: var(--bad-bg); color: var(--bad); }
+.tbl-wrap { overflow-x: auto; }
+table.t { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.t th, table.t td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+table.t td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* RAID */
+.array { display: grid; gap: 8px; margin-top: 12px; }
+.disk { border: 2px solid var(--line); border-radius: 10px; background: var(--surface-2); padding: 6px; cursor: pointer; min-width: 0; text-align: center; font: inherit; color: inherit; }
+.disk:hover { border-color: var(--accent); }
+.disk .dh { font: 600 12px var(--mono); margin-bottom: 4px; }
+.disk .dh small { display: block; font: 400 11px var(--body); color: var(--muted); }
+.blk { font: 600 12px var(--mono); border-radius: 5px; padding: 5px 2px; margin-top: 4px; background: var(--data); color: var(--data-fg); }
+.blk.p { background: var(--par); color: var(--par-fg); }
+.blk.q { background: var(--q); color: var(--q-fg); }
+.blk.del { text-decoration: line-through; opacity: .55; }
+.disk.fail { border-color: var(--bad); background: var(--bad-bg); }
+.disk.fail .blk { background: transparent; color: var(--bad); border: 1px dashed var(--bad); }
+.disk.pairA { box-shadow: inset 0 -4px 0 var(--accent); }
+.disk.pairB { box-shadow: inset 0 -4px 0 var(--accent-2); }
+.xor { font-family: var(--mono); font-size: 14px; border-collapse: collapse; width: 100%; }
+.xor td { padding: 4px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.xor tr.res td { font-weight: 700; border-top: 2px solid var(--fg); }
+.xor tr.lost td { color: var(--bad); }
+.xor tr.rec td { color: var(--good); font-weight: 700; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.meter { height: 14px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin: 6px 0; }
+.meter > span { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width .35s; }
+.code { font-family: var(--mono); font-size: 13px; background: var(--surface-2); padding: 1px 6px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<style>
+.parts { display: grid; gap: 10px; }
+.parts label { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+@media (max-width: 520px) { .parts label { grid-template-columns: minmax(0, 1fr); gap: 3px; } }
+.checks { display: grid; gap: 8px; margin-top: 10px; }
+.chk { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; padding: 9px 11px; border-radius: 9px; background: var(--surface-2); }
+.chk .ic { width: 24px; height: 24px; border-radius: 99px; display: grid; place-items: center; font: 700 13px var(--mono); }
+.chk.ok .ic { background: var(--good-bg); color: var(--good); }
+.chk.warn .ic { background: var(--warn-bg); color: var(--warn); }
+.chk.bad .ic { background: var(--bad-bg); color: var(--bad); }
+.chk b { display: block; font-size: 14px; }
+.chk span { font-size: 13px; color: var(--muted); }
+.verdict { font-family: var(--display); font-size: 22px; font-weight: 700; margin: 4px 0 2px; }
+.spec { font-size: 12px; color: var(--muted); margin-top: -4px; grid-column: 2; }
+@media (max-width: 520px) { .spec { grid-column: 1; } }
+</style>
+<div class="wrap">
+<header>
+  <div class="kicker">Arsitektur dan Organisasi Komputer · Pertemuan 10</div>
+  <h1>Lab Rakit PC Virtual</h1>
+  <p class="sub">Pilih komponen dan biarkan lab memeriksa kecocokannya; hitung kebutuhan daya, PSU, listrik, dan UPS; lalu rencanakan RAM untuk lab virtualisasi jaringan.</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Bagian lab">
+  <button role="tab" id="tab-rakit" aria-selected="true" data-tab="rakit">1 · Rakit & Cek Kompatibilitas</button>
+  <button role="tab" id="tab-daya" aria-selected="false" data-tab="daya">2 · Daya, PSU & UPS</button>
+  <button role="tab" id="tab-ram" aria-selected="false" data-tab="ram">3 · RAM & Virtualisasi</button>
+</nav>
+
+<!-- TAB 1 -->
+<section id="panel-rakit" role="tabpanel" aria-labelledby="tab-rakit">
+  <div class="grid">
+    <div class="card">
+      <h2>Pilih komponen</h2>
+      <p class="muted" style="margin:0">Mulai dari contoh rakitan, lalu ganti komponennya satu per satu.</p>
+      <div class="presets" id="b-pre"></div>
+      <div class="parts" id="parts"></div>
+      <p class="note" style="margin-top:12px">Spesifikasi CPU dan GPU mengikuti data resmi produsen; motherboard, casing, dan PSU adalah contoh generik. Panjang GPU berbeda antarmerek — selalu cek spesifikasi produk yang akan dibeli.</p>
+    </div>
+    <div class="card" aria-live="polite">
+      <h2>Hasil pemeriksaan</h2>
+      <div class="verdict" id="b-verdict"></div>
+      <div class="stats" id="b-stats"></div>
+      <div class="checks" id="b-checks"></div>
+    </div>
+  </div>
+</section>
+
+<!-- TAB 2 -->
+<section id="panel-daya" role="tabpanel" aria-labelledby="tab-daya" hidden>
+  <div class="grid">
+    <div class="card">
+      <h2>Kebutuhan daya</h2>
+      <div class="row" style="margin:6px 0 12px"><button class="btn ghost" id="d-take">Ambil dari rakitan di tab 1</button></div>
+      <div class="formgrid">
+        <label for="d-cpu">Daya maks. CPU (W)<input type="number" id="d-cpu" min="0" step="1" value="117"></label>
+        <label for="d-gpu">Daya GPU (W)<input type="number" id="d-gpu" min="0" step="1" value="115"></label>
+        <label for="d-oth">Komponen lain (W)<input type="number" id="d-oth" min="0" step="1" value="60"></label>
+        <label for="d-eff">Sertifikasi PSU<select id="d-eff"><option value="0.80">80 PLUS (± 80%)</option><option value="0.85" selected>80 PLUS Bronze (± 85%)</option><option value="0.90">80 PLUS Gold (± 90%)</option><option value="0.92">80 PLUS Platinum (± 92%)</option></select></label>
+      </div>
+      <h3>Pemakaian & biaya listrik</h3>
+      <div class="formgrid">
+        <label for="d-avg">Beban rata-rata saat dipakai (W)<input type="number" id="d-avg" min="0" step="10" value="150"></label>
+        <label for="d-n">Jumlah PC<input type="number" id="d-n" min="1" step="1" value="30"></label>
+        <label for="d-h">Jam per hari<input type="number" id="d-h" min="0" max="24" step="1" value="8"></label>
+        <label for="d-day">Hari per bulan<input type="number" id="d-day" min="0" max="31" step="1" value="22"></label>
+        <label for="d-tarif">Tarif listrik (Rp/kWh)<input type="number" id="d-tarif" min="0" step="1" value="1445"></label>
+        <label for="d-pf">Power factor UPS<input type="number" id="d-pf" min="0.4" max="1" step="0.05" value="0.6"></label>
+      </div>
+      <p class="note">Tarif contoh ± Rp1.445/kWh — cek tarif PLN yang berlaku. Efisiensi PSU adalah perkiraan pada beban ± 50%.</p>
+    </div>
+    <div class="card" aria-live="polite">
+      <h2>Hasil</h2>
+      <div class="stats" id="d-stats"></div>
+      <div class="formula" id="d-formula"></div>
+      <h3>Biaya listrik per bulan</h3>
+      <div class="tbl-wrap"><table class="t" id="d-cost"></table></div>
+      <h3>UPS untuk 1 PC (+ monitor 25 W)</h3>
+      <div id="d-ups"></div>
+      <div class="narr" id="d-narr"></div>
+    </div>
+  </div>
+</section>
+
+<!-- TAB 3 -->
+<section id="panel-ram" role="tabpanel" aria-labelledby="tab-ram" hidden>
+  <div class="grid">
+    <div class="card">
+      <h2>Bandwidth RAM</h2>
+      <div class="formgrid">
+        <label for="m-type">Jenis & kecepatan<select id="m-type"><option value="2666">DDR4-2666</option><option value="3200" selected>DDR4-3200</option><option value="4800">DDR5-4800</option><option value="5600">DDR5-5600</option><option value="6000">DDR5-6000</option></select></label>
+        <label for="m-ch">Mode<select id="m-ch"><option value="1">Single channel (1 keping)</option><option value="2" selected>Dual channel (2 keping)</option></select></label>
+      </div>
+      <div class="stats"><div class="stat"><div class="lbl">Bandwidth puncak</div><div class="val" id="m-bw">–</div></div></div>
+      <div class="formula" id="m-formula"></div>
+      <div class="bars" id="m-bars"></div>
+      <p class="note">MT/s = mega transfer per detik. Satu channel memori lebarnya 64 bit = 8 byte per transfer (ingat bus data di P6).</p>
+    </div>
+    <div class="card">
+      <h2>Rencana RAM lab virtualisasi</h2>
+      <p class="muted" style="margin:0">Berapa RAM yang dibutuhkan PC untuk menjalankan topologi jaringan virtual (GNS3, EVE-NG, VirtualBox)?</p>
+      <div class="formgrid" style="margin-top:10px" id="vm-form"></div>
+      <div class="stats" id="vm-stats"></div>
+      <div class="meter" aria-hidden="true"><span id="vm-meter"></span></div>
+      <div class="narr" id="vm-narr"></div>
+      <p class="note">Angka per VM adalah perkiraan praktis untuk lab; kebutuhan sebenarnya tergantung versi image dan beban.</p>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s), $$ = (s) => Array.from(document.querySelectorAll(s));
+  const fmt = (n, d = 0) => Number(n).toLocaleString('id-ID', { maximumFractionDigits: d });
+  const num = (id, def = 0) => { const v = parseFloat($(id).value); return isFinite(v) ? v : def; };
+  const TABS = ['rakit', 'daya', 'ram'];
+  function showTab(t) {
+    $$('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    TABS.forEach(x => { $('#panel-' + x).hidden = x !== t; });
+    try { localStorage.setItem('pc-lab-tab', t); } catch (e) {}
+  }
+  $$('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  // ---------- KATALOG ----------
+  const CAT = {
+    cpu: [
+      { id: 'i3', name: 'Intel Core i3-12100', socket: 'LGA1700', base: 60, max: 89, igpu: true, mem: ['DDR4', 'DDR5'], core: '4 core / 8 thread', gen: 12 },
+      { id: 'i5f', name: 'Intel Core i5-12400F', socket: 'LGA1700', base: 65, max: 117, igpu: false, mem: ['DDR4', 'DDR5'], core: '6 core / 12 thread', gen: 12 },
+      { id: 'i514', name: 'Intel Core i5-14400', socket: 'LGA1700', base: 65, max: 148, igpu: true, mem: ['DDR4', 'DDR5'], core: '10 core (6P + 4E) / 16 thread', gen: 14 },
+      { id: 'r5g', name: 'AMD Ryzen 5 5600G', socket: 'AM4', base: 65, max: 88, igpu: true, mem: ['DDR4'], core: '6 core / 12 thread' },
+      { id: 'r5', name: 'AMD Ryzen 5 5600', socket: 'AM4', base: 65, max: 88, igpu: false, mem: ['DDR4'], core: '6 core / 12 thread' },
+      { id: 'r76', name: 'AMD Ryzen 5 7600', socket: 'AM5', base: 65, max: 88, igpu: true, mem: ['DDR5'], core: '6 core / 12 thread' },
+      { id: 'r77', name: 'AMD Ryzen 7 7700X', socket: 'AM5', base: 105, max: 142, igpu: true, mem: ['DDR5'], core: '8 core / 16 thread' },
+    ],
+    mb: [
+      { id: 'h610', name: 'H610M (mATX, DDR4)', socket: 'LGA1700', ff: 'mATX', mem: 'DDR4', m2: 1, dimm: 2, chip: 'H610' },
+      { id: 'b760d5', name: 'B760M (mATX, DDR5)', socket: 'LGA1700', ff: 'mATX', mem: 'DDR5', m2: 2, dimm: 4, chip: 'B760' },
+      { id: 'b760d4', name: 'B760 (ATX, DDR4)', socket: 'LGA1700', ff: 'ATX', mem: 'DDR4', m2: 2, dimm: 4, chip: 'B760' },
+      { id: 'b550', name: 'B550M (mATX, DDR4)', socket: 'AM4', ff: 'mATX', mem: 'DDR4', m2: 2, dimm: 4, chip: 'B550' },
+      { id: 'a620', name: 'A620M (mATX, DDR5)', socket: 'AM5', ff: 'mATX', mem: 'DDR5', m2: 1, dimm: 2, chip: 'A620' },
+      { id: 'b650', name: 'B650 (ATX, DDR5)', socket: 'AM5', ff: 'ATX', mem: 'DDR5', m2: 2, dimm: 4, chip: 'B650' },
+    ],
+    ram: [
+      { id: 'd4x1', name: 'DDR4-3200 1 × 8 GB', type: 'DDR4', n: 1, gb: 8 },
+      { id: 'd4x2', name: 'DDR4-3200 2 × 8 GB', type: 'DDR4', n: 2, gb: 16 },
+      { id: 'd4x16', name: 'DDR4-3200 2 × 16 GB', type: 'DDR4', n: 2, gb: 32 },
+      { id: 'd5x1', name: 'DDR5-5600 1 × 16 GB', type: 'DDR5', n: 1, gb: 16 },
+      { id: 'd5x2', name: 'DDR5-5600 2 × 16 GB', type: 'DDR5', n: 2, gb: 32 },
+    ],
+    st: [
+      { id: 'none', name: '— tidak ada —', m2: false, w: 0 },
+      { id: 'nv4', name: 'SSD NVMe Gen4 1 TB (M.2)', m2: true, w: 7 },
+      { id: 'nv3', name: 'SSD NVMe Gen3 512 GB (M.2)', m2: true, w: 6 },
+      { id: 'sata', name: 'SSD SATA 512 GB (2,5")', m2: false, w: 4 },
+      { id: 'hdd', name: 'HDD 2 TB (3,5")', m2: false, w: 8 },
+    ],
+    gpu: [
+      { id: 'none', name: '— tanpa kartu grafis —', w: 0, len: 0, conn: '' },
+      { id: '1650', name: 'GeForce GTX 1650', w: 75, len: 170, conn: 'tanpa konektor tambahan' },
+      { id: '4060', name: 'GeForce RTX 4060', w: 115, len: 245, conn: '1 × PCIe 8-pin' },
+      { id: '7600', name: 'Radeon RX 7600', w: 165, len: 250, conn: '1 × PCIe 8-pin' },
+      { id: '4070', name: 'GeForce RTX 4070', w: 200, len: 300, conn: '1 × 8-pin / 16-pin' },
+    ],
+    psu: [
+      { id: '450', name: '450 W 80 PLUS Bronze', w: 450 }, { id: '550', name: '550 W 80 PLUS Bronze', w: 550 },
+      { id: '650', name: '650 W 80 PLUS Gold', w: 650 }, { id: '750', name: '750 W 80 PLUS Gold', w: 750 },
+    ],
+    case: [
+      { id: 'matx', name: 'Mini tower mATX (GPU maks. 280 mm)', ff: ['mATX', 'ITX'], gpu: 280 },
+      { id: 'atx', name: 'Mid tower ATX (GPU maks. 360 mm)', ff: ['ATX', 'mATX', 'ITX'], gpu: 360 },
+    ],
+  };
+  const SLOTS = [['cpu', 'CPU', 'cpu'], ['mb', 'Motherboard', 'mb'], ['ram', 'RAM', 'ram'], ['st1', 'Storage 1', 'st'], ['st2', 'Storage 2', 'st'], ['gpu', 'Kartu grafis', 'gpu'], ['psu', 'PSU', 'psu'], ['case', 'Casing', 'case']];
+  $('#parts').innerHTML = SLOTS.map(([k, l, c]) => `<label for="p-${k}">${l}<select id="p-${k}">${CAT[c].map(o => `<option value="${o.id}">${o.name}</option>`).join('')}</select></label><div class="spec" id="s-${k}"></div>`).join('');
+  const PRE = {
+    hook: { label: 'Kasus pembuka (bermasalah)', cpu: 'r76', mb: 'b550', ram: 'd4x2', st1: 'nv4', st2: 'none', gpu: '4070', psu: '450', case: 'matx' },
+    lab: { label: 'PC lab jaringan', cpu: 'i514', mb: 'b760d5', ram: 'd5x2', st1: 'nv4', st2: 'none', gpu: 'none', psu: '450', case: 'matx' },
+    nas: { label: 'Mini server NAS/CCTV', cpu: 'r5g', mb: 'b550', ram: 'd4x2', st1: 'nv3', st2: 'hdd', gpu: 'none', psu: '450', case: 'atx' },
+    game: { label: 'PC desain/gaming', cpu: 'r77', mb: 'b650', ram: 'd5x2', st1: 'nv4', st2: 'sata', gpu: '4070', psu: '650', case: 'atx' },
+  };
+  $('#b-pre').innerHTML = Object.entries(PRE).map(([k, v]) => `<button class="btn ghost" data-pre="${k}" aria-pressed="false">${v.label}</button>`).join('');
+  $$('#b-pre button').forEach(b => b.addEventListener('click', () => { const p = PRE[b.dataset.pre]; SLOTS.forEach(([k]) => $('#p-' + k).value = p[k]); $$('#b-pre button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); check(); }));
+  SLOTS.forEach(([k]) => $('#p-' + k).addEventListener('change', () => { $$('#b-pre button').forEach(x => x.setAttribute('aria-pressed', 'false')); check(); }));
+  const get = (k, c) => CAT[c].find(o => o.id === $('#p-' + k).value);
+  const STD = [450, 550, 650, 750, 850, 1000];
+  let last = null;
+  function check() {
+    const cpu = get('cpu', 'cpu'), mb = get('mb', 'mb'), ram = get('ram', 'ram'), s1 = get('st1', 'st'), s2 = get('st2', 'st'), gpu = get('gpu', 'gpu'), psu = get('psu', 'psu'), cs = get('case', 'case');
+    $('#s-cpu').textContent = `${cpu.socket} · ${cpu.core} · ${cpu.base} W (maks. ± ${cpu.max} W) · ${cpu.igpu ? 'ada iGPU' : 'tanpa iGPU'} · ${cpu.mem.join('/')}`;
+    $('#s-mb').textContent = `Socket ${mb.socket} · ${mb.ff} · ${mb.mem} · ${mb.dimm} slot RAM · ${mb.m2} slot M.2`;
+    $('#s-gpu').textContent = gpu.w ? `± ${gpu.w} W · panjang ± ${gpu.len} mm · ${gpu.conn}` : '';
+    ['ram', 'st1', 'st2', 'psu', 'case'].forEach(k => $('#s-' + k).textContent = '');
+    const C = [];
+    const add = (lv, t, d) => C.push({ lv, t, d });
+    if (cpu.socket === mb.socket) add('ok', 'Socket CPU cocok', `${cpu.socket} = ${mb.socket}`);
+    else add('bad', 'Socket CPU tidak cocok', `${cpu.name} memakai ${cpu.socket}, motherboard memakai ${mb.socket}. CPU tidak bisa dipasang secara fisik.`);
+    if (ram.type !== mb.mem) add('bad', 'Jenis RAM tidak cocok dengan motherboard', `Motherboard hanya punya slot ${mb.mem}, RAM yang dipilih ${ram.type}. Takik (notch) DDR4 dan DDR5 berbeda posisi.`);
+    else if (!cpu.mem.includes(ram.type)) add('bad', 'CPU tidak mendukung jenis RAM ini', `${cpu.name} hanya mendukung ${cpu.mem.join('/')}.`);
+    else add('ok', 'Jenis RAM cocok', `${ram.type} didukung CPU dan motherboard`);
+    if (ram.n > mb.dimm) add('bad', 'Slot RAM kurang', `${ram.n} keping, motherboard hanya ${mb.dimm} slot`);
+    if (ram.n === 1) add('warn', 'Single channel', 'Hanya 1 keping RAM → bandwidth separuh dari dual channel. Lebih baik 2 keping (lihat tab 3).');
+    if (cpu.gen === 14 && mb.chip === 'H610') add('warn', 'Perlu update BIOS', 'Motherboard seri 600 umumnya perlu BIOS versi baru agar mengenali CPU generasi ke-14. Cek daftar CPU yang didukung di situs produsen.');
+    if (!cs.ff.includes(mb.ff)) add('bad', 'Motherboard tidak muat di casing', `Motherboard ${mb.ff} (ATX = 305 × 244 mm) tidak muat di casing yang hanya mendukung ${cs.ff.join('/')}.`);
+    else add('ok', 'Motherboard muat di casing', `${mb.ff} didukung casing`);
+    if (!gpu.w && !cpu.igpu) add('bad', 'Tidak ada output tampilan', `${cpu.name} tidak punya iGPU dan tidak ada kartu grafis. Monitor tidak akan menampilkan apa pun.`);
+    else add('ok', 'Output tampilan tersedia', gpu.w ? `Lewat kartu grafis ${gpu.name}` : `Lewat iGPU ${cpu.name} (port video di motherboard)`);
+    if (gpu.w && gpu.len > cs.gpu) add('bad', 'Kartu grafis terlalu panjang', `± ${gpu.len} mm, casing maksimum ${cs.gpu} mm.`);
+    const sts = [s1, s2].filter(s => s.id !== 'none'), m2n = sts.filter(s => s.m2).length;
+    if (!sts.length) add('bad', 'Tidak ada storage', 'Sistem operasi tidak bisa dipasang.');
+    else if (m2n > mb.m2) add('bad', 'Slot M.2 kurang', `${m2n} SSD M.2, motherboard hanya ${mb.m2} slot M.2.`);
+    else add('ok', 'Storage terpasang', `${sts.map(s => s.name).join(' + ')}${m2n ? ` · slot M.2 terpakai ${m2n}/${mb.m2}` : ''}`);
+    const other = 50 + sts.reduce((a, s) => a + s.w, 0), est = cpu.max + gpu.w + other, rec = est / 0.65, recStd = STD.find(x => x >= rec) || 1000;
+    if (psu.w < est) add('bad', 'PSU tidak cukup', `Perkiraan beban puncak ± ${fmt(est)} W melebihi PSU ${psu.w} W. Komputer bisa mati mendadak saat beban berat.`);
+    else if (psu.w < rec) add('warn', 'PSU pas-pasan', `Beban puncak ± ${fmt(est)} W = ${fmt(est / psu.w * 100)}% kapasitas. Disarankan ≥ ${fmt(rec)} W (≈ ${recStd} W) agar ada cadangan.`);
+    else add('ok', 'PSU cukup', `Beban puncak ± ${fmt(est)} W = ${fmt(est / psu.w * 100)}% dari ${psu.w} W`);
+    if (ram.gb < 16) add('warn', 'RAM kecil untuk lab virtualisasi', `${ram.gb} GB cukup untuk kantor, tetapi sempit untuk GNS3/EVE-NG dengan banyak VM (tab 3).`);
+    const bad = C.filter(c => c.lv === 'bad').length, warn = C.filter(c => c.lv === 'warn').length;
+    $('#b-verdict').innerHTML = bad ? `<span style="color:var(--bad)">✕ ${bad} masalah wajib diperbaiki</span>` : warn ? `<span style="color:var(--warn)">! Bisa dirakit, ${warn} catatan</span>` : '<span style="color:var(--good)">✓ Semua komponen cocok</span>';
+    $('#b-stats').innerHTML = `<div class="stat"><div class="lbl">Beban puncak</div><div class="val">${fmt(est)} <small>W</small></div></div><div class="stat"><div class="lbl">PSU disarankan</div><div class="val">${recStd} <small>W</small></div></div><div class="stat"><div class="lbl">RAM</div><div class="val">${ram.gb} <small>GB</small></div></div>`;
+    const ord = { bad: 0, warn: 1, ok: 2 };
+    $('#b-checks').innerHTML = C.sort((a, b) => ord[a.lv] - ord[b.lv]).map(c => `<div class="chk ${c.lv}"><div class="ic">${c.lv === 'ok' ? '✓' : c.lv === 'warn' ? '!' : '✕'}</div><div><b>${c.t}</b><span>${c.d}</span></div></div>`).join('');
+    last = { cpu: cpu.max, gpu: gpu.w, oth: other };
+  }
+  $$('#b-pre button')[0].click();
+
+  // ---------- TAB 2 ----------
+  $('#d-take').addEventListener('click', () => { if (!last) return; $('#d-cpu').value = last.cpu; $('#d-gpu').value = last.gpu; $('#d-oth').value = last.oth; calcD(); });
+  ['#d-cpu', '#d-gpu', '#d-oth', '#d-eff', '#d-avg', '#d-n', '#d-h', '#d-day', '#d-tarif', '#d-pf'].forEach(s => $(s).addEventListener('input', calcD));
+  const rp = (x) => 'Rp' + fmt(Math.round(x));
+  function calcD() {
+    const cpu = num('#d-cpu'), gpu = num('#d-gpu'), oth = num('#d-oth'), eff = +$('#d-eff').value;
+    const avg = num('#d-avg'), n = Math.max(1, num('#d-n', 1)), h = num('#d-h'), dd = num('#d-day'), tarif = num('#d-tarif'), pf = Math.max(0.4, num('#d-pf', 0.6));
+    const est = cpu + gpu + oth, rec = est / 0.65, recStd = STD.find(x => x >= rec) || 1000, peakIn = est / eff;
+    $('#d-stats').innerHTML = `<div class="stat"><div class="lbl">Beban puncak (DC)</div><div class="val">${fmt(est)} <small>W</small></div></div>
+      <div class="stat"><div class="lbl">PSU minimal disarankan</div><div class="val">${fmt(rec)} <small>W</small></div></div>
+      <div class="stat"><div class="lbl">Ukuran standar</div><div class="val">${recStd} <small>W</small></div></div>`;
+    $('#d-formula').textContent = `beban = ${fmt(cpu)} + ${fmt(gpu)} + ${fmt(oth)} = ${fmt(est)} W  ·  PSU ≥ ${fmt(est)} ÷ 0,65 = ${fmt(rec)} W  ·  daya dari stopkontak saat puncak = ${fmt(est)} ÷ ${String(eff).replace('.', ',')} = ${fmt(peakIn)} W`;
+    const rows = [['80 PLUS', 0.80], ['Bronze', 0.85], ['Gold', 0.90], ['Platinum', 0.92]].map(([l, e]) => { const win = avg / e, kwh = win * h * dd * n / 1000; return { l, e, win, kwh, cost: kwh * tarif }; });
+    const base = rows[1];
+    $('#d-cost').innerHTML = `<tr><th>PSU</th><th>Daya masuk/PC</th><th>kWh/bulan (${fmt(n)} PC)</th><th>Biaya/bulan</th></tr>` + rows.map(r => `<tr${Math.abs(r.e - eff) < 1e-9 ? ' style="font-weight:700"' : ''}><td>${r.l} (${fmt(r.e * 100)}%)</td><td class="num">${fmt(r.win, 1)} W</td><td class="num">${fmt(r.kwh, 1)}</td><td class="num">${rp(r.cost)}</td></tr>`).join('');
+    const upsW = peakIn + 25, upsVA = upsW / pf, upsStd = [600, 650, 800, 1000, 1200, 1500, 2000].find(x => x >= upsVA * 1.25) || 3000;
+    $('#d-ups').innerHTML = `<div class="formula">(${fmt(peakIn)} + 25) W ÷ PF ${String(pf).replace('.', ',')} = ${fmt(upsVA)} VA → tambah cadangan 25% ≈ ${fmt(upsVA * 1.25)} VA → pilih UPS ± ${upsStd} VA</div>`;
+    const gold = rows[2];
+    $('#d-narr').innerHTML = `<b class="title">Kesimpulan</b>PSU yang disarankan ± ${recStd} W, sehingga beban puncak hanya ± 65% kapasitas: efisien, tidak panas, dan masih ada ruang untuk upgrade. Untuk ${fmt(n)} PC, PSU Gold menghemat ± ${rp(base.cost - gold.cost)} per bulan dibanding Bronze (${fmt(base.kwh - gold.kwh, 1)} kWh). UPS dinyatakan dalam <b>VA</b>; daya nyata (W) = VA × power factor, jadi UPS 1.000 VA dengan PF 0,6 hanya sanggup ± 600 W.`;
+  }
+  calcD();
+
+  // ---------- TAB 3 ----------
+  ['#m-type', '#m-ch'].forEach(s => $(s).addEventListener('input', calcM));
+  function calcM() {
+    const mt = +$('#m-type').value, ch = +$('#m-ch').value, bw = mt * 8 * ch / 1000;
+    $('#m-bw').innerHTML = `${fmt(bw, 1)} <small>GB/s</small>`;
+    $('#m-formula').textContent = `${fmt(mt)} MT/s × 8 byte × ${ch} channel = ${fmt(bw, 1)} GB/s`;
+    const all = [['DDR4-3200 single', 25.6], ['DDR4-3200 dual', 51.2], ['DDR5-5600 single', 44.8], ['DDR5-5600 dual', 89.6]];
+    $('#m-bars').innerHTML = all.map(([l, v]) => `<div class="barrow"><b style="font-size:13px">${l}</b><div class="track"><span style="width:${v / 96 * 100}%;background:${l.includes('dual') ? 'var(--good)' : 'var(--warn)'}"></span></div><div class="tm">${fmt(v, 1)} GB/s</div></div>`).join('');
+  }
+  calcM();
+  const VM = [['vm-host', 'Sistem operasi host + GNS3/EVE (GB)', 6, 1], ['vm-chr', 'Router MikroTik CHR (× 256 MB)', 4, 1], ['vm-ios', 'Router Cisco IOSv (× 512 MB)', 2, 1], ['vm-lin', 'VM Linux server (× 2 GB)', 2, 1], ['vm-win', 'VM Windows client (× 4 GB)', 1, 1], ['vm-ram', 'RAM terpasang (GB)', 16, 4]];
+  $('#vm-form').innerHTML = VM.map(v => `<label for="${v[0]}">${v[1]}<input type="number" id="${v[0]}" min="0" step="${v[3]}" value="${v[2]}"></label>`).join('');
+  VM.forEach(v => $('#' + v[0]).addEventListener('input', calcVM));
+  function calcVM() {
+    const host = num('#vm-host'), chr = num('#vm-chr') * 0.25, ios = num('#vm-ios') * 0.5, lin = num('#vm-lin') * 2, win = num('#vm-win') * 4, ram = Math.max(1, num('#vm-ram', 16));
+    const need = host + chr + ios + lin + win, pct = need / ram * 100;
+    $('#vm-stats').innerHTML = `<div class="stat"><div class="lbl">Kebutuhan</div><div class="val">${fmt(need, 2)} <small>GB</small></div></div><div class="stat"><div class="lbl">Pemakaian RAM</div><div class="val">${fmt(pct)} <small>%</small></div></div>`;
+    $('#vm-meter').style.width = Math.min(100, pct) + '%'; $('#vm-meter').style.background = pct > 100 ? 'var(--bad)' : pct > 85 ? 'var(--warn)' : 'var(--good)';
+    $('#vm-narr').innerHTML = `<b class="title">${pct > 100 ? '<span class="status bad">RAM tidak cukup</span>' : pct > 85 ? '<span class="status warn">Pas-pasan</span>' : '<span class="status ok">Cukup</span>'}</b>` +
+      (pct > 100 ? `Kurang ± ${fmt(need - ram, 2)} GB. Sistem akan memakai swap di storage (ingat P5 & P9: ribuan kali lebih lambat dari RAM) sehingga lab terasa sangat lambat. Tambah RAM atau kurangi jumlah VM.` : pct > 85 ? 'Masih jalan, tetapi tanpa sisa untuk browser dan aplikasi lain. Pertimbangkan menambah RAM.' : `Masih tersisa ± ${fmt(ram - need, 2)} GB untuk aplikasi lain.`);
+  }
+  calcVM();
+
+  let start = (location.hash || '').replace('#', '');
+  if (!TABS.includes(start)) { try { start = localStorage.getItem('pc-lab-tab') || 'rakit'; } catch (e) { start = 'rakit'; } }
+  showTab(TABS.includes(start) ? start : 'rakit');
+})();
+</script>
+</body>
+</html>
